@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>d00t.live</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body, html {
             margin: 0;
@@ -23,9 +24,20 @@
     </style>
 </head>
 <body>
-    <video width="1280" height="720" controls autoplay>
-    <source src="http://99.85.82.227/hls/stream.m3u8" type="application/vnd.apple.mpegurl">
-    Your browser does not support the video tag.
-</video>
+    <video id="video" width="1280" height="720" controls autoplay muted></video>
+    <script>
+        if (Hls.isSupported()) {
+            var video = document.getElementById('video');
+            var hls = new Hls();
+            hls.loadSource('http://99.85.82.227/hls/stream.m3u8');
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                video.play();
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = 'http://99.85.82.227/hls/stream.m3u8';
+            video.play();
+        }
+    </script>
 </body>
 </html>
