@@ -24,19 +24,51 @@
     </style>
 </head>
 <body>
-    <video id="video" width="1280" height="720" controls autoplay muted></video>
+    <video id="video" controls autoplay muted playsinline></video>
     <script>
-        if (Hls.isSupported()) {
+        // Function to load the default video
+        function loadDefaultVideo() {
             var video = document.getElementById('video');
+            video.src = 'video.mp4';
+            video.loop = true;
+            video.playsinline = true;
+            video.removeAttribute('controls'); // No controls for default video, like your original
+            video.play();
+        }
+
+        var video = document.getElementById('video');
+        var hlsUrl = 'http://99.85.82.227/hls/stream.m3u8';
+
+        // Case 1: Browser supports hls.js
+        if (Hls.isSupported()) {
             var hls = new Hls();
-            hls.loadSource('http://99.85.82.227/hls/stream.m3u8');
+            hls.loadSource(hlsUrl);
             hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
                 video.play();
             });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = 'http://99.85.82.227/hls/stream.m3u8';
-            video.play();
+            hls.on(Hls.Events.ERROR, function(event, data) {
+                // If a fatal network error occurs (e.g., stream not available), switch to default video
+                if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                    hls.destroy(); // Clean up hls.js instance
+                    loadDefaultVideo();
+                }
+            });
+        }
+        // Case 2: Browser supports native HLS (e.g., Safari)
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = hlsUrl;
+            video.addEventListener('loadedmetadata', function() {
+                video.play();
+            });
+            video.addEventListener('error', function() {
+                // If the stream fails to load, switch to default video
+                loadDefaultVideo();
+            });
+        }
+        // Case 3: No HLS support at all, use default video
+        else {
+            loadDefaultVideo();
         }
     </script>
 </body>
